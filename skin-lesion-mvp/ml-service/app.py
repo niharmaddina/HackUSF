@@ -100,14 +100,16 @@ def load_models(models_dir="./models"):
                 try:
                     # Initialize the base model architecture first
                     if 'resnet' in model_name:
-                        model = torchvision_models.resnet50(pretrained=False)
+                        model = torchvision_models.resnet50(weights=None)
                         model.fc = torch.nn.Linear(model.fc.in_features, 7)
                     elif 'densenet' in model_name:
-                        model = torchvision_models.densenet121(pretrained=False)
+                        model = torchvision_models.densenet121(weights=None)
                         model.classifier = torch.nn.Linear(model.classifier.in_features, 7)
                     elif 'mobilenet' in model_name:
-                        model = torchvision_models.mobilenet_v3_large(pretrained=False)
-                        model.classifier[3] = torch.nn.Linear(model.classifier[3].in_features, 7)
+                        model = torchvision_models.mobilenet_v3_large(weights=None)
+                        # the fine-tuned checkpoint replaced the whole head: 960 -> 256 -> 7
+                        model.classifier = torch.nn.Sequential(
+                            torch.nn.Linear(960, 256), torch.nn.Hardswish(), torch.nn.Dropout(p=0.2), torch.nn.Linear(256, 7))
                     else:
                         raise ValueError(f"Unknown model architecture: {model_name}")
                     
